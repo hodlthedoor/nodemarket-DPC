@@ -5,7 +5,7 @@ import {ERC721} from "@solmate/tokens/ERC721.sol";
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 
-contract NodemarketDPC is ERC721, Ownable {
+contract DPC is ERC721, Ownable {
 
     using Strings for uint256;
     uint256 public currentTokenId;

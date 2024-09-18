@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import "@solmate/tokens/ERC721.sol";
-import "@openzeppelin/access/Ownable.sol";
+import {ERC721} from "@solmate/tokens/ERC721.sol";
+import {Ownable} from "@openzeppelin/access/Ownable.sol";
+import {Strings} from "@openzeppelin/utils/Strings.sol";
 
 contract NodemarketDPC is ERC721, Ownable {
+
+    using Strings for uint256;
     uint256 public currentTokenId;
     uint256 public totalSupply;
 
@@ -27,16 +30,22 @@ contract NodemarketDPC is ERC721, Ownable {
         imageURI = _imageURI;
     }
 
-    // Mint function to mint NFTs to an address
-    function mint(address to) external onlyOwner {
+    function mint(address[] calldata recipients) external onlyOwner {
+        
+        uint256 numRecipients = recipients.length;
         uint256 tokenId = currentTokenId;
-        _mint(to, tokenId);
+        
+        unchecked {
 
-        unchecked{
-            currentTokenId++;
-            totalSupply++;
+            for (uint256 i; i < numRecipients; i++) {
+                _mint(recipients[i], tokenId + i);
+            }
+
+            currentTokenId += numRecipients; 
+            totalSupply += numRecipients;   
         }
     }
+
     // Burn function, the owner can burn their own NFT, contract owner can burn any NFT
     function burn(uint256 tokenId) external {
         require(msg.sender == ownerOf(tokenId) || msg.sender == owner(), NotAuthorised());
@@ -56,66 +65,17 @@ contract NodemarketDPC is ERC721, Ownable {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), TokenDoesNotExist());
 
-        string memory json = string(abi.encodePacked(
-            '{"name": "', baseName, ' #', uint2str(tokenId), '",',
-            '"description": "', description, '",',
-            '"image": "', imageURI, '"}'
-        ));
-
-        return string(abi.encodePacked("data:application/json;base64,", base64(bytes(json))));
+        return string(
+            abi.encodePacked(
+                'data:application/json;utf8,{"name": "', baseName, ' #', tokenId.toString(), '",',
+                '"description": "', description, '",',
+                '"image": "', imageURI, '"}'
+            )
+        );
     }
 
     function _exists(uint256 tokenId) internal view returns (bool) {
         return ownerOf(tokenId) != address(0);
     }
 
-    // Utility function to convert uint256 to string
-    function uint2str(uint256 _i) internal pure returns (string memory) {
-        if (_i == 0) {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        while (_i != 0) {
-            len -= 1;
-            bstr[len] = bytes1(uint8(48 + _i % 10));
-            _i /= 10;
-        }
-        return string(bstr);
-    }
-
-    // Utility function to encode in base64
-    function base64(bytes memory data) internal pure returns (string memory) {
-        string memory TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        string memory result = new string(4 * ((data.length + 2) / 3));
-        bytes memory table = bytes(TABLE);
-
-        assembly {
-            let tablePtr := add(table, 1)
-            let resultPtr := add(result, 32)
-
-            for {
-                let i := 0
-            } lt(i, mload(data)) {
-
-            } {
-                data := add(data, 3)
-                let input := mload(data)
-
-                mstore(resultPtr, shl(248, mload(add(tablePtr, and(shr(18, input), 0x3F)))))
-                mstore(add(resultPtr, 1), shl(248, mload(add(tablePtr, and(shr(12, input), 0x3F)))))
-                mstore(add(resultPtr, 2), shl(248, mload(add(tablePtr, and(shr(6, input), 0x3F)))))
-                mstore(add(resultPtr, 3), shl(248, mload(add(tablePtr, and(input, 0x3F)))))
-
-                resultPtr := add(resultPtr, 4)
-            }
-        }
-
-        return result;
-    }
 }

@@ -6,8 +6,8 @@ import {Ownable} from "@openzeppelin/access/Ownable.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
 
 contract EarlyAccessNodemarketPass is ERC721, Ownable {
-
     using Strings for uint256;
+
     uint256 public currentTokenId;
     uint256 public totalSupply;
 
@@ -24,25 +24,23 @@ contract EarlyAccessNodemarketPass is ERC721, Ownable {
         string memory _baseName,
         string memory _description,
         string memory _imageURI
-    ) ERC721(_name, _symbol) Ownable(msg.sender){
+    ) ERC721(_name, _symbol) Ownable(msg.sender) {
         baseName = _baseName;
         description = _description;
         imageURI = _imageURI;
     }
 
     function mint(address[] calldata recipients) external onlyOwner {
-        
         uint256 numRecipients = recipients.length;
         uint256 tokenId = currentTokenId;
-        
-        unchecked {
 
+        unchecked {
             for (uint256 i; i < numRecipients; i++) {
                 _mint(recipients[i], tokenId + i);
             }
 
-            currentTokenId += numRecipients; 
-            totalSupply += numRecipients;   
+            currentTokenId += numRecipients;
+            totalSupply += numRecipients;
         }
     }
 
@@ -52,7 +50,7 @@ contract EarlyAccessNodemarketPass is ERC721, Ownable {
         _burn(tokenId);
 
         unchecked {
-           totalSupply--;
+            totalSupply--;
         }
     }
 
@@ -67,9 +65,17 @@ contract EarlyAccessNodemarketPass is ERC721, Ownable {
 
         return string(
             abi.encodePacked(
-                'data:application/json;utf8,{"name": "', baseName, ' #', tokenId.toString(), '",',
-                '"description": "', description, '",',
-                '"image": "', imageURI, '"}'
+                'data:application/json;utf8,{"name": "',
+                baseName,
+                " #",
+                tokenId.toString(),
+                '",',
+                '"description": "',
+                description,
+                '",',
+                '"image": "',
+                imageURI,
+                '"}'
             )
         );
     }
@@ -77,5 +83,4 @@ contract EarlyAccessNodemarketPass is ERC721, Ownable {
     function _exists(uint256 tokenId) internal view returns (bool) {
         return ownerOf(tokenId) != address(0);
     }
-
 }

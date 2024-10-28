@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0  # Fetch all history for better dependency resolution
+          fetch-depth: 0
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -32,9 +32,16 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          forge install
-          forge remappings > remappings.txt
-        id: install
+          forge install foundry-rs/forge-std --no-commit
+          forge install transmissions11/solmate --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts --no-commit
+          
+      - name: Setup Remappings
+        run: |
+          echo "@solmate=lib/solmate/src/" > remappings.txt
+          echo "@openzeppelin=lib/openzeppelin-contracts/contracts/" >> remappings.txt
+          echo "forge-std/=lib/forge-std/src/" >> remappings.txt
+          cat remappings.txt
 
       - name: Run Forge fmt
         run: |

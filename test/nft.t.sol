@@ -21,15 +21,9 @@ contract DPCTest is Test {
         owner = makeAddr("owner");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
-        
+
         vm.startPrank(owner);
-        nft = new DPC(
-            NAME,
-            SYMBOL,
-            BASE_NAME,
-            DESCRIPTION,
-            IMAGE_URI
-        );
+        nft = new DPC(NAME, SYMBOL, BASE_NAME, DESCRIPTION, IMAGE_URI);
         vm.stopPrank();
     }
 
@@ -70,14 +64,14 @@ contract DPCTest is Test {
         // First mint a token
         address[] memory recipients = new address[](1);
         recipients[0] = user1;
-        
+
         vm.prank(owner);
         nft.mint(recipients);
-        
+
         // Test burning by token owner
         vm.prank(user1);
         nft.burn(0);
-        
+
         assertEq(nft.totalSupply(), 0);
         vm.expectRevert();
         nft.ownerOf(0);
@@ -87,14 +81,14 @@ contract DPCTest is Test {
         // First mint a token
         address[] memory recipients = new address[](1);
         recipients[0] = user1;
-        
+
         vm.prank(owner);
         nft.mint(recipients);
-        
+
         // Test burning by contract owner
         vm.prank(owner);
         nft.burn(0);
-        
+
         assertEq(nft.totalSupply(), 0);
         vm.expectRevert();
         nft.ownerOf(0);
@@ -104,10 +98,10 @@ contract DPCTest is Test {
         // First mint a token
         address[] memory recipients = new address[](1);
         recipients[0] = user1;
-        
+
         vm.prank(owner);
         nft.mint(recipients);
-        
+
         // Try burning from unauthorized address
         vm.prank(user2);
         nft.burn(0);
@@ -115,16 +109,16 @@ contract DPCTest is Test {
 
     function test_UpdateImageURI() public {
         string memory newURI = "ipfs://QmNewExample";
-        
+
         vm.prank(owner);
         nft.updateImageURI(newURI);
-        
+
         assertEq(nft.imageURI(), newURI);
     }
 
     function testFail_UpdateImageURINotOwner() public {
         string memory newURI = "ipfs://QmNewExample";
-        
+
         vm.prank(user1);
         nft.updateImageURI(newURI);
     }
@@ -133,10 +127,10 @@ contract DPCTest is Test {
         // First mint a token
         address[] memory recipients = new address[](1);
         recipients[0] = user1;
-        
+
         vm.prank(owner);
         nft.mint(recipients);
-        
+
         string memory expectedURI = string(
             abi.encodePacked(
                 'data:application/json;utf8,{"name": "',
@@ -152,7 +146,7 @@ contract DPCTest is Test {
                 '"}'
             )
         );
-        
+
         assertEq(nft.tokenURI(0), expectedURI);
     }
 
@@ -162,20 +156,20 @@ contract DPCTest is Test {
 
     function test_BatchMint(uint8 numRecipients) public {
         vm.assume(numRecipients > 0);
-        
+
         address[] memory recipients = new address[](numRecipients);
-        for(uint8 i = 0; i < numRecipients; i++) {
+        for (uint8 i = 0; i < numRecipients; i++) {
             recipients[i] = makeAddr(string.concat("user", vm.toString(i)));
         }
-        
+
         vm.prank(owner);
         nft.mint(recipients);
-        
+
         assertEq(nft.totalSupply(), numRecipients);
         assertEq(nft.currentTokenId(), numRecipients);
-        
+
         // Verify each token was minted to the correct recipient
-        for(uint8 i = 0; i < numRecipients; i++) {
+        for (uint8 i = 0; i < numRecipients; i++) {
             assertEq(nft.ownerOf(i), recipients[i]);
         }
     }
